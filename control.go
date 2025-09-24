@@ -580,7 +580,7 @@ func (c *controlConn) withConnHost(fn func(*connHost) *Iter) *Iter {
 		return fn(ch)
 	}
 
-	return newErrIter(errNoControl, newQueryMetrics(), "", nil, nil)
+	return newErrIter(errNoControl, &queryMetrics{}, "", nil, nil)
 }
 
 func (c *controlConn) withConn(fn func(*Conn) *Iter) *Iter {
@@ -605,7 +605,8 @@ func (c *controlConn) query(statement string, values ...interface{}) (iter *Iter
 				newLogFieldString("statement", statement), newLogFieldError("err", iter.err))
 		}
 
-		iter.metrics.attempt(1, 0, c.getConn().host, false)
+		qry.metrics.attempt(0)
+		qry.hostMetricsManager.attempt(0, c.getConn().host)
 		if iter.err == nil || !c.retry.Attempt(qry) {
 			break
 		}
@@ -616,7 +617,7 @@ func (c *controlConn) query(statement string, values ...interface{}) (iter *Iter
 
 func (c *controlConn) awaitSchemaAgreement() error {
 	return c.withConn(func(conn *Conn) *Iter {
-		return newErrIter(conn.awaitSchemaAgreement(context.TODO()), newQueryMetrics(), "", nil, nil)
+		return newErrIter(conn.awaitSchemaAgreement(context.TODO()), &queryMetrics{}, "", nil, nil)
 	}).err
 }
 
