@@ -2251,6 +2251,8 @@ func uuidUnmarshal(kind string, data []byte, value interface{}) error {
 			*v = nil
 		case *UUID:
 			*v = UUID{}
+		case *[16]byte:
+			*v = UUID{}
 		case *interface{}:
 			*v = UUID{}
 		default:
@@ -2319,6 +2321,10 @@ func (t timeUUIDType) Marshal(value interface{}) ([]byte, error) {
 func (t timeUUIDType) Unmarshal(data []byte, value interface{}) error {
 	switch v := value.(type) {
 	case *time.Time:
+		if len(data) == 0 {
+			*v = time.Time{}
+			return nil
+		}
 		id, err := UUIDFromBytes(data)
 		if err != nil {
 			return err
