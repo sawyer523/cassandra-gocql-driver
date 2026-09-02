@@ -2256,7 +2256,7 @@ func uuidUnmarshal(kind string, data []byte, value interface{}) error {
 		case *interface{}:
 			*v = UUID{}
 		default:
-			return unmarshalErrorf("can not unmarshal %s into %T. Accepted types: *UUID, *[]byte, *string, *interface{}.", kind, value)
+			return unmarshalErrorf("can not unmarshal %s into %T. Accepted types: *UUID, *[16]byte, *[]byte, *string, *interface{}.", kind, value)
 		}
 
 		return nil
@@ -2293,7 +2293,7 @@ func uuidUnmarshal(kind string, data []byte, value interface{}) error {
 		*v = u[:]
 		return nil
 	}
-	return unmarshalErrorf("can not unmarshal %s into %T. Accepted types: *UUID, *[]byte, *string, *interface{}.", kind, value)
+	return unmarshalErrorf("can not unmarshal %s into %T. Accepted types: *UUID, *[16]byte, *[]byte, *string, *interface{}.", kind, value)
 }
 
 type timeUUIDType struct{}
