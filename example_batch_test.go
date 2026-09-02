@@ -29,7 +29,7 @@ import (
 	"fmt"
 	"log"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 // Example_batch demonstrates how to execute a batch of statements.
@@ -61,16 +61,20 @@ func Example_batch() {
 
 	// Example 2: Advanced batch usage with Entries for more control
 	b := session.Batch(gocql.UnloggedBatch)
-	b.Entries = append(b.Entries, gocql.BatchEntry{
-		Stmt:       "INSERT INTO example.batches (pk, ck, description) VALUES (?, ?, ?)",
-		Args:       []interface{}{1, 4, "1.4"},
-		Idempotent: true,
-	})
-	b.Entries = append(b.Entries, gocql.BatchEntry{
-		Stmt:       "INSERT INTO example.batches (pk, ck, description) VALUES (?, ?, ?)",
-		Args:       []interface{}{1, 5, "1.5"},
-		Idempotent: true,
-	})
+	b.Entries = append(
+		b.Entries, gocql.BatchEntry{
+			Stmt:       "INSERT INTO example.batches (pk, ck, description) VALUES (?, ?, ?)",
+			Args:       []interface{}{1, 4, "1.4"},
+			Idempotent: true,
+		},
+	)
+	b.Entries = append(
+		b.Entries, gocql.BatchEntry{
+			Stmt:       "INSERT INTO example.batches (pk, ck, description) VALUES (?, ?, ?)",
+			Args:       []interface{}{1, 5, "1.5"},
+			Idempotent: true,
+		},
+	)
 
 	err = b.ExecContext(ctx)
 	if err != nil {

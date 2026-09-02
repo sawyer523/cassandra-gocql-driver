@@ -27,9 +27,9 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
-	"github.com/apache/cassandra-gocql-driver/v2/gocqlzap"
-	"github.com/apache/cassandra-gocql-driver/v2/gocqlzerolog"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/gocqlzap"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/gocqlzerolog"
 )
 
 // Example_structuredLogging demonstrates the new structured logging features
@@ -65,9 +65,11 @@ func Example_structuredLogging() {
 	appLogger := baseLogger.With(zap.String("component", "app"))
 	driverLogger := baseLogger.With(zap.String("component", "gocql-driver"))
 
-	appLogger.Info("Starting Zap structured logging example",
+	appLogger.Info(
+		"Starting Zap structured logging example",
 		zap.String("example", "structured_logging"),
-		zap.String("logger_type", "zap"))
+		zap.String("logger_type", "zap"),
+	)
 
 	// Create gocql logger from driver logger
 	gocqlZapLogger := gocqlzap.NewUnnamedZapLogger(driverLogger)
@@ -83,9 +85,11 @@ func Example_structuredLogging() {
 	defer zapSession.Close()
 
 	// Perform some operations that will generate logs
-	appLogger.Info("Inserting data into database",
+	appLogger.Info(
+		"Inserting data into database",
 		zap.String("operation", "insert"),
-		zap.Int("record_id", 1))
+		zap.Int("record_id", 1),
+	)
 
 	err = zapSession.Query("INSERT INTO example.log_demo (id, value) VALUES (?, ?)").
 		Bind(1, "zap logging demo").
@@ -95,9 +99,11 @@ func Example_structuredLogging() {
 		log.Fatal(err)
 	}
 
-	appLogger.Info("Querying data from database",
+	appLogger.Info(
+		"Querying data from database",
 		zap.String("operation", "select"),
-		zap.Int("record_id", 1))
+		zap.Int("record_id", 1),
+	)
 
 	var id int
 	var value string
@@ -114,10 +120,12 @@ func Example_structuredLogging() {
 		log.Fatal(err)
 	}
 
-	appLogger.Info("Database operation completed successfully",
+	appLogger.Info(
+		"Database operation completed successfully",
 		zap.String("operation", "select"),
 		zap.Int("record_id", id),
-		zap.String("record_value", value))
+		zap.String("record_value", value),
+	)
 
 	// Example 2: Using Zerolog integration
 	// Create a production Zerolog logger with structured JSON output

@@ -33,7 +33,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/cassandra-gocql-driver/v2/internal/ccm"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/ccm"
 )
 
 type TestHostFilter struct {
@@ -83,12 +83,14 @@ func TestControlConn_ReconnectRefreshesRing(t *testing.T) {
 
 	testFilter := &TestHostFilter{allowedHosts: allowedHosts}
 
-	session := createSession(t, func(config *ClusterConfig) {
-		config.Hosts = []string{firstNode.Addr}
-		config.Events.DisableTopologyEvents = true
-		config.Events.DisableNodeStatusEvents = true
-		config.HostFilter = testFilter
-	})
+	session := createSession(
+		t, func(config *ClusterConfig) {
+			config.Hosts = []string{firstNode.Addr}
+			config.Events.DisableTopologyEvents = true
+			config.Events.DisableNodeStatusEvents = true
+			config.HostFilter = testFilter
+		},
+	)
 	defer session.Close()
 
 	if session.control == nil || session.control.conn.Load() == nil {

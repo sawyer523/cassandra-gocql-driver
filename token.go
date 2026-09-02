@@ -37,7 +37,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/cassandra-gocql-driver/v2/internal/murmur"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/murmur"
 )
 
 // a token partitioner
@@ -232,9 +232,11 @@ func (t *tokenRing) GetHostForToken(token token) (host *HostInfo, endToken token
 	}
 
 	// find the primary replica
-	p := sort.Search(len(t.tokens), func(i int) bool {
-		return !t.tokens[i].token.Less(token)
-	})
+	p := sort.Search(
+		len(t.tokens), func(i int) bool {
+			return !t.tokens[i].token.Less(token)
+		},
+	)
 
 	if p == len(t.tokens) {
 		// wrap around to the first in the ring

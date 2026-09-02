@@ -32,7 +32,7 @@ import (
 	"reflect"
 	"text/tabwriter"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 // Example_dynamicColumns demonstrates how to handle dynamic column list.
@@ -58,8 +58,10 @@ func Example_dynamicColumns() {
 	printQuery := func(ctx context.Context, session *gocql.Session, stmt string, values ...interface{}) error {
 		iter := session.Query(stmt, values...).IterContext(ctx)
 		fmt.Println(stmt)
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ',
-			0)
+		w := tabwriter.NewWriter(
+			os.Stdout, 0, 0, 1, ' ',
+			0,
+		)
 		for i, columnInfo := range iter.Columns() {
 			if i > 0 {
 				fmt.Fprint(w, "\t| ")

@@ -30,7 +30,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 const logLineEnding = "%%%\n%%%"
@@ -66,8 +66,10 @@ func TestGocqlZapLog(t *testing.T) {
 		if len(logEntry) == 0 {
 			continue
 		}
-		if !strings.Contains(logEntry, "info\tgocql\tControl connection failed to establish a connection to host.\t{\"host_addr\": "+
-			"\"0.0.0.1\", \"port\": 9042, \"host_id\": \"\", \"err\": \"dial tcp 0.0.0.1:9042:") {
+		if !strings.Contains(
+			logEntry, "info\tgocql\tControl connection failed to establish a connection to host.\t{\"host_addr\": "+
+				"\"0.0.0.1\", \"port\": 9042, \"host_id\": \"\", \"err\": \"dial tcp 0.0.0.1:9042:",
+		) {
 			continue
 		} else {
 			found = true

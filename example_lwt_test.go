@@ -29,7 +29,7 @@ import (
 	"fmt"
 	"log"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 // ExampleQuery_MapScanCAS demonstrates how to execute a single-statement lightweight transaction.
@@ -49,14 +49,18 @@ func ExampleQuery_MapScanCAS() {
 
 	ctx := context.Background()
 
-	err = session.Query("INSERT INTO example.my_lwt_table (pk, version, value) VALUES (?, ?, ?)",
-		1, 1, "a").ExecContext(ctx)
+	err = session.Query(
+		"INSERT INTO example.my_lwt_table (pk, version, value) VALUES (?, ?, ?)",
+		1, 1, "a",
+	).ExecContext(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 	m := make(map[string]interface{})
-	applied, err := session.Query("UPDATE example.my_lwt_table SET value = ? WHERE pk = ? IF version = ?",
-		"b", 1, 0).MapScanCASContext(ctx, m)
+	applied, err := session.Query(
+		"UPDATE example.my_lwt_table SET value = ? WHERE pk = ? IF version = ?",
+		"b", 1, 0,
+	).MapScanCASContext(ctx, m)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -71,8 +75,10 @@ func ExampleQuery_MapScanCAS() {
 	fmt.Println(value)
 
 	m = make(map[string]interface{})
-	applied, err = session.Query("UPDATE example.my_lwt_table SET value = ? WHERE pk = ? IF version = ?",
-		"b", 1, 1).MapScanCASContext(ctx, m)
+	applied, err = session.Query(
+		"UPDATE example.my_lwt_table SET value = ? WHERE pk = ? IF version = ?",
+		"b", 1, 1,
+	).MapScanCASContext(ctx, m)
 	if err != nil {
 		log.Fatal(err)
 	}

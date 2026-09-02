@@ -50,7 +50,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/apache/cassandra-gocql-driver/v2/internal/streams"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/streams"
 )
 
 const (
@@ -59,21 +59,27 @@ const (
 
 func TestApprove(t *testing.T) {
 	tests := map[bool]bool{
-		approve("org.apache.cassandra.auth.PasswordAuthenticator", []string{}):                                             true,
-		approve("org.apache.cassandra.auth.MutualTlsWithPasswordFallbackAuthenticator", []string{}):                        true,
-		approve("org.apache.cassandra.auth.MutualTlsAuthenticator", []string{}):                                            true,
-		approve("com.instaclustr.cassandra.auth.SharedSecretAuthenticator", []string{}):                                    true,
-		approve("com.datastax.bdp.cassandra.auth.DseAuthenticator", []string{}):                                            true,
-		approve("io.aiven.cassandra.auth.AivenAuthenticator", []string{}):                                                  true,
-		approve("com.amazon.helenus.auth.HelenusAuthenticator", []string{}):                                                true,
-		approve("com.ericsson.bss.cassandra.ecaudit.auth.AuditAuthenticator", []string{}):                                  true,
-		approve("com.scylladb.auth.SaslauthdAuthenticator", []string{}):                                                    true,
-		approve("com.scylladb.auth.TransitionalAuthenticator", []string{}):                                                 true,
-		approve("com.instaclustr.cassandra.auth.InstaclustrPasswordAuthenticator", []string{}):                             true,
-		approve("com.apache.cassandra.auth.FakeAuthenticator", []string{}):                                                 true,
-		approve("com.apache.cassandra.auth.FakeAuthenticator", nil):                                                        true,
-		approve("com.apache.cassandra.auth.FakeAuthenticator", []string{"com.apache.cassandra.auth.FakeAuthenticator"}):    true,
-		approve("com.apache.cassandra.auth.FakeAuthenticator", []string{"com.apache.cassandra.auth.NotFakeAuthenticator"}): false,
+		approve("org.apache.cassandra.auth.PasswordAuthenticator", []string{}):                      true,
+		approve("org.apache.cassandra.auth.MutualTlsWithPasswordFallbackAuthenticator", []string{}): true,
+		approve("org.apache.cassandra.auth.MutualTlsAuthenticator", []string{}):                     true,
+		approve("com.instaclustr.cassandra.auth.SharedSecretAuthenticator", []string{}):             true,
+		approve("com.datastax.bdp.cassandra.auth.DseAuthenticator", []string{}):                     true,
+		approve("io.aiven.cassandra.auth.AivenAuthenticator", []string{}):                           true,
+		approve("com.amazon.helenus.auth.HelenusAuthenticator", []string{}):                         true,
+		approve("com.ericsson.bss.cassandra.ecaudit.auth.AuditAuthenticator", []string{}):           true,
+		approve("com.scylladb.auth.SaslauthdAuthenticator", []string{}):                             true,
+		approve("com.scylladb.auth.TransitionalAuthenticator", []string{}):                          true,
+		approve("com.instaclustr.cassandra.auth.InstaclustrPasswordAuthenticator", []string{}):      true,
+		approve("com.apache.cassandra.auth.FakeAuthenticator", []string{}):                          true,
+		approve("com.apache.cassandra.auth.FakeAuthenticator", nil):                                 true,
+		approve(
+			"com.apache.cassandra.auth.FakeAuthenticator",
+			[]string{"com.apache.cassandra.auth.FakeAuthenticator"},
+		): true,
+		approve(
+			"com.apache.cassandra.auth.FakeAuthenticator",
+			[]string{"com.apache.cassandra.auth.NotFakeAuthenticator"},
+		): false,
 	}
 	for k, v := range tests {
 		if k != v {
@@ -87,7 +93,10 @@ func TestJoinHostPort(t *testing.T) {
 		"127.0.0.1:0": JoinHostPort("127.0.0.1", 0),
 		"127.0.0.1:1": JoinHostPort("127.0.0.1:1", 9142),
 		"[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:0": JoinHostPort("2001:0db8:85a3:0000:0000:8a2e:0370:7334", 0),
-		"[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:1": JoinHostPort("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:1", 9142),
+		"[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:1": JoinHostPort(
+			"[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:1",
+			9142,
+		),
 	}
 	for k, v := range tests {
 		if k != v {
@@ -274,7 +283,10 @@ func TestStartupTimeout(t *testing.T) {
 		t.Fatalf("Expected to receive no connections error - got '%s'", err)
 	}
 
-	if !strings.Contains(log.String(), "no response to connection startup within timeout") && !strings.Contains(log.String(), "no response received from cassandra within timeout period") {
+	if !strings.Contains(
+		log.String(),
+		"no response to connection startup within timeout",
+	) && !strings.Contains(log.String(), "no response received from cassandra within timeout period") {
 		t.Fatalf("Expected to receive timeout log message  - got '%s'", log.String())
 	}
 
@@ -361,14 +373,16 @@ type testQueryObserver struct {
 func (o *testQueryObserver) ObserveQuery(ctx context.Context, q ObservedQuery) {
 	host := q.Host.ConnectAddress().String()
 	o.metrics[host] = q.Metrics
-	o.logger.Debug("Observed query.",
+	o.logger.Debug(
+		"Observed query.",
 		NewLogFieldString("stmt", q.Statement),
 		NewLogFieldInt("rows", q.Rows),
 		NewLogFieldString("duration", q.End.Sub(q.Start).String()),
 		NewLogFieldString("host", host),
 		NewLogFieldInt("attempts", q.Metrics.Attempts),
 		NewLogFieldString("latency", strconv.FormatInt(q.Metrics.TotalLatency, 10)),
-		NewLogFieldError("err", q.Err))
+		NewLogFieldError("err", q.Err),
+	)
 }
 
 func (o *testQueryObserver) GetMetrics(host *HostInfo) *hostMetrics {
@@ -465,7 +479,12 @@ func TestQueryMultinodeWithMetrics(t *testing.T) {
 		requests := int(atomic.LoadInt64(&nodes[i].nKillReq))
 
 		if requests != observedMetrics.Attempts {
-			t.Fatalf("expected observed attempts %v to match server requests %v on host %v", observedMetrics.Attempts, requests, ip)
+			t.Fatalf(
+				"expected observed attempts %v to match server requests %v on host %v",
+				observedMetrics.Attempts,
+				requests,
+				ip,
+			)
 		}
 
 		observedLatency := observedMetrics.TotalLatency
@@ -475,7 +494,13 @@ func TestQueryMultinodeWithMetrics(t *testing.T) {
 
 	observedLatency := totalLatency / totalAttempts
 	if observedLatency != iter.Latency() {
-		t.Fatalf("expected observed latency %v (%v/%v) to match query latency %v", observedLatency, totalLatency, totalAttempts, iter.Latency())
+		t.Fatalf(
+			"expected observed latency %v (%v/%v) to match query latency %v",
+			observedLatency,
+			totalLatency,
+			totalAttempts,
+			iter.Latency(),
+		)
 	}
 
 	// the query will only be attempted once, but is being retried
@@ -636,15 +661,17 @@ func BenchmarkSingleConn(b *testing.B) {
 	defer db.Close()
 
 	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			err := db.Query("void").Exec()
-			if err != nil {
-				b.Error(err)
-				return
+	b.RunParallel(
+		func(pb *testing.PB) {
+			for pb.Next() {
+				err := db.Query("void").Exec()
+				if err != nil {
+					b.Error(err)
+					return
+				}
 			}
-		}
-	})
+		},
+	)
 }
 
 func TestQueryTimeoutReuseStream(t *testing.T) {
@@ -1050,7 +1077,10 @@ func TestFrameHeaderObserver(t *testing.T) {
 	}
 	voidResultFrame := frames[2]
 	if voidResultFrame.Length != int32(4) {
-		t.Fatalf("Expected to receive frame with body length 4, instead received body length %d", voidResultFrame.Length)
+		t.Fatalf(
+			"Expected to receive frame with body length 4, instead received body length %d",
+			voidResultFrame.Length,
+		)
 	}
 }
 

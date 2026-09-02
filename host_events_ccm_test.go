@@ -29,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/cassandra-gocql-driver/v2/internal/ccm"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/ccm"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,11 +55,13 @@ func TestTopologyChangesListener(t *testing.T) {
 
 	listener := &topologyChangeTestListener{}
 
-	session := createSession(t, func(config *ClusterConfig) {
-		config.Metadata.HostListener.TopologyChangeListener = listener
-		config.Events.DisableTopologyEvents = false
-		config.Hosts = cluster.HostAddrs()
-	})
+	session := createSession(
+		t, func(config *ClusterConfig) {
+			config.Metadata.HostListener.TopologyChangeListener = listener
+			config.Events.DisableTopologyEvents = false
+			config.Hosts = cluster.HostAddrs()
+		},
+	)
 	defer session.Close()
 
 	// adding a node should trigger a new node event
@@ -75,14 +77,16 @@ func TestTopologyChangesListener(t *testing.T) {
 	require.NoError(t, err)
 
 	// Expecting to see the new node event for the added node
-	require.Eventually(t, func() bool {
-		for _, event := range listener.hostAddedEvent {
-			if event.Host.ConnectAddress().String() == newNodeIP {
-				return true
+	require.Eventually(
+		t, func() bool {
+			for _, event := range listener.hostAddedEvent {
+				if event.Host.ConnectAddress().String() == newNodeIP {
+					return true
+				}
 			}
-		}
-		return false
-	}, time.Second*60, time.Millisecond*200, "Expected new node event for %s", newNodeIP)
+			return false
+		}, time.Second*60, time.Millisecond*200, "Expected new node event for %s", newNodeIP,
+	)
 
 	t.Logf("Started node %s decommission", newNodeName)
 	err = ccm.DecommissionNode(newNodeName)
@@ -93,14 +97,16 @@ func TestTopologyChangesListener(t *testing.T) {
 	require.NoError(t, err)
 
 	// Expecting to see the removed node event for the removed node
-	require.Eventually(t, func() bool {
-		for _, event := range listener.hostRemovedEvent {
-			if event.Host.ConnectAddress().String() == newNodeIP {
-				return true
+	require.Eventually(
+		t, func() bool {
+			for _, event := range listener.hostRemovedEvent {
+				if event.Host.ConnectAddress().String() == newNodeIP {
+					return true
+				}
 			}
-		}
-		return false
-	}, time.Second*120, time.Millisecond*200, "Expected removed node event for %s", newNodeIP)
+			return false
+		}, time.Second*120, time.Millisecond*200, "Expected removed node event for %s", newNodeIP,
+	)
 }
 
 // Determines the next node name, IP, and JMX port to use based on the existing nodes in the CCM cluster.
@@ -175,12 +181,14 @@ func TestHostStateChangesListener(t *testing.T) {
 
 	listener := &hostStateChangeTestListener{}
 
-	session := createSession(t, func(config *ClusterConfig) {
-		config.Metadata.HostListener.HostStateChangeListener = listener
-		config.Events.DisableNodeStatusEvents = false
-		config.Hosts = cluster.HostAddrs()
-		config.Logger = NewLogger(LogLevelDebug)
-	})
+	session := createSession(
+		t, func(config *ClusterConfig) {
+			config.Metadata.HostListener.HostStateChangeListener = listener
+			config.Events.DisableNodeStatusEvents = false
+			config.Hosts = cluster.HostAddrs()
+			config.Logger = NewLogger(LogLevelDebug)
+		},
+	)
 	defer session.Close()
 
 	listener.clear()
@@ -192,28 +200,32 @@ func TestHostStateChangesListener(t *testing.T) {
 	require.NoError(t, err)
 
 	// Expecting to see the node down event for the stopped node
-	require.Eventually(t, func() bool {
-		for _, event := range listener.nodeDownEvent {
-			if event.Host.ConnectAddress().String() == nodeToStop.Addr {
-				return true
+	require.Eventually(
+		t, func() bool {
+			for _, event := range listener.nodeDownEvent {
+				if event.Host.ConnectAddress().String() == nodeToStop.Addr {
+					return true
+				}
 			}
-		}
-		return false
-	}, time.Second*60, time.Millisecond*200, "Expected node down event for %s", nodeToStop.Addr)
+			return false
+		}, time.Second*60, time.Millisecond*200, "Expected node down event for %s", nodeToStop.Addr,
+	)
 
 	t.Logf("Starting node %s", nodeToStop.Name)
 	err = ccm.NodeUp(nodeToStop.Name)
 	require.NoError(t, err)
 
 	// Expecting to see the node up event for the started node
-	require.Eventually(t, func() bool {
-		for _, event := range listener.nodeUpEvent {
-			if event.Host.ConnectAddress().String() == nodeToStop.Addr {
-				return true
+	require.Eventually(
+		t, func() bool {
+			for _, event := range listener.nodeUpEvent {
+				if event.Host.ConnectAddress().String() == nodeToStop.Addr {
+					return true
+				}
 			}
-		}
-		return false
-	}, time.Second*60, time.Millisecond*200, "Expected node up event for %s", nodeToStop.Addr)
+			return false
+		}, time.Second*60, time.Millisecond*200, "Expected node up event for %s", nodeToStop.Addr,
+	)
 }
 
 func TestHostListenersNeverCalledDuringSessionCreation(t *testing.T) {
@@ -226,11 +238,13 @@ func TestHostListenersNeverCalledDuringSessionCreation(t *testing.T) {
 	hostStateChangeListener := &hostStateChangeTestListener{}
 	topologyChangeListener := &topologyChangeTestListener{}
 
-	session := createSession(t, func(config *ClusterConfig) {
-		config.Metadata.HostListener.HostStateChangeListener = hostStateChangeListener
-		config.Metadata.HostListener.TopologyChangeListener = topologyChangeListener
-		config.Hosts = cluster.HostAddrs()
-	})
+	session := createSession(
+		t, func(config *ClusterConfig) {
+			config.Metadata.HostListener.HostStateChangeListener = hostStateChangeListener
+			config.Metadata.HostListener.TopologyChangeListener = topologyChangeListener
+			config.Hosts = cluster.HostAddrs()
+		},
+	)
 	defer session.Close()
 
 	require.Empty(t, hostStateChangeListener.nodeUpEvent)

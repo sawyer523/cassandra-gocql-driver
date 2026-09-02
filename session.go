@@ -38,7 +38,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/apache/cassandra-gocql-driver/v2/internal/lru"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/lru"
 )
 
 // Session is the interface used by users to interact with the database.
@@ -146,7 +146,10 @@ func NewSession(cfg ClusterConfig) (*Session, error) {
 	}
 
 	if cfg.SerialConsistency > 0 && !cfg.SerialConsistency.isSerial() {
-		return nil, fmt.Errorf("the default SerialConsistency level is not allowed to be anything else but SERIAL or LOCAL_SERIAL. Recived value: %v", cfg.SerialConsistency)
+		return nil, fmt.Errorf(
+			"the default SerialConsistency level is not allowed to be anything else but SERIAL or LOCAL_SERIAL. Recived value: %v",
+			cfg.SerialConsistency,
+		)
 	}
 
 	// TODO: we should take a context in here at some point
@@ -170,9 +173,13 @@ func NewSession(cfg ClusterConfig) (*Session, error) {
 		s.types = cfg.RegisteredTypes.Copy()
 	}
 
-	s.schemaDescriber = newSchemaDescriber(s, newRefreshDebouncer(schemaRefreshDebounceTime, func() error {
-		return refreshSchemas(s)
-	}))
+	s.schemaDescriber = newSchemaDescriber(
+		s, newRefreshDebouncer(
+			schemaRefreshDebounceTime, func() error {
+				return refreshSchemas(s)
+			},
+		),
+	)
 
 	s.nodeEvents = newEventDebouncer("NodeEvents", s.handleNodeEvent, s.logger)
 
@@ -214,10 +221,10 @@ func NewSession(cfg ClusterConfig) (*Session, error) {
 	// Propagate session ready listener
 	s.sessionReadyListeners = newInternalSessionReadyListener(cfg.Metadata.SessionReadyListener)
 
-	//Check the TLS Config before trying to connect to anything external
+	// Check the TLS Config before trying to connect to anything external
 	connCfg, err := connConfig(&s.cfg)
 	if err != nil {
-		//TODO: Return a typed error
+		// TODO: Return a typed error
 		return nil, fmt.Errorf("gocql: unable to create session: %v", err)
 	}
 	s.connCfg = connCfg
@@ -239,8 +246,8 @@ func NewSession(cfg ClusterConfig) (*Session, error) {
 	if err := s.init(); err != nil {
 		s.Close()
 		if err == ErrNoConnectionsStarted {
-			//This error used to be generated inside NewSession & returned directly
-			//Forward it on up to be backwards compatible
+			// This error used to be generated inside NewSession & returned directly
+			// Forward it on up to be backwards compatible
 			return nil, ErrNoConnectionsStarted
 		} else {
 			// TODO(zariel): dont wrap this error in fmt.Errorf, return a typed error
@@ -331,8 +338,10 @@ func (s *Session) init() error {
 			continue
 		}
 		if !exists {
-			s.logger.Info("Adding host (session initialization).",
-				NewLogFieldIP("host_addr", host.ConnectAddress()), NewLogFieldString("host_id", host.HostID()))
+			s.logger.Info(
+				"Adding host (session initialization).",
+				NewLogFieldIP("host_addr", host.ConnectAddress()), NewLogFieldString("host_id", host.HostID()),
+			)
 		}
 
 		atomic.AddInt64(&left, 1)
@@ -406,10 +415,12 @@ func (s *Session) init() error {
 	if !s.cfg.disableControlConn && s.schemaDescriber != nil {
 		err := s.schemaDescriber.refreshSchemaMetadata()
 		if err != nil {
-			s.logger.Warning("Failed to initialize schema metadata. "+
-				"Token-aware routing will fall back to the configured fallback policy. "+
-				"Attempts to retrieve keyspace metadata will fail with ErrKeyspaceDoesNotExist until schema refresh succeeds.",
-				NewLogFieldError("err", err))
+			s.logger.Warning(
+				"Failed to initialize schema metadata. "+
+					"Token-aware routing will fall back to the configured fallback policy. "+
+					"Attempts to retrieve keyspace metadata will fail with ErrKeyspaceDoesNotExist until schema refresh succeeds.",
+				NewLogFieldError("err", err),
+			)
 		}
 	}
 
@@ -433,9 +444,11 @@ func (s *Session) AwaitSchemaAgreement(ctx context.Context) error {
 	if s.cfg.disableControlConn {
 		return errNoControl
 	}
-	return s.control.withConn(func(conn *Conn) *Iter {
-		return newErrIter(conn.awaitSchemaAgreement(ctx), &queryMetrics{}, "", nil, nil)
-	}).err
+	return s.control.withConn(
+		func(conn *Conn) *Iter {
+			return newErrIter(conn.awaitSchemaAgreement(ctx), &queryMetrics{}, "", nil, nil)
+		},
+	).err
 }
 
 func (s *Session) reconnectDownedHosts(intv time.Duration) {
@@ -455,10 +468,12 @@ func (s *Session) reconnectDownedHosts(intv time.Duration) {
 				if h.IsUp() {
 					continue
 				}
-				s.logger.Debug("Reconnecting to downed host.",
+				s.logger.Debug(
+					"Reconnecting to downed host.",
 					NewLogFieldIP("host_addr", h.ConnectAddress()),
 					NewLogFieldInt("host_port", h.Port()),
-					NewLogFieldString("host_id", h.HostID()))
+					NewLogFieldString("host_id", h.HostID()),
+				)
 				// we let the pool call handleNodeConnected to change the host state
 				s.pool.addHost(h)
 			}
@@ -623,7 +638,11 @@ func (s *Session) executeQuery(qry *internalQuery) (it *Iter) {
 }
 
 func (s *Session) removeHost(h *HostInfo) {
-	s.logger.Warning("Removing host.", NewLogFieldIP("host_addr", h.ConnectAddress()), NewLogFieldString("host_id", h.HostID()))
+	s.logger.Warning(
+		"Removing host.",
+		NewLogFieldIP("host_addr", h.ConnectAddress()),
+		NewLogFieldString("host_id", h.HostID()),
+	)
 	s.policy.RemoveHost(h)
 	hostID := h.HostID()
 	s.pool.removeHost(hostID)
@@ -681,7 +700,11 @@ func (s *Session) getConn() *Conn {
 
 // Returns statement metadata for the purposes of generating a routing key.
 // If keyspace == "" it uses the keyspace which is specified in Cluster.Keyspace
-func (s *Session) routingStatementMetadata(ctx context.Context, stmt string, keyspace string) (*StatementMetadata, error) {
+func (s *Session) routingStatementMetadata(
+	ctx context.Context,
+	stmt string,
+	keyspace string,
+) (*StatementMetadata, error) {
 	if keyspace == "" {
 		keyspace = s.cfg.Keyspace
 	}
@@ -937,7 +960,10 @@ func (b *Batch) MapExecCAS(dest map[string]interface{}) (applied bool, iter *Ite
 // MapExecCASContext executes a batch operation with the provided context much like ExecuteBatchCAS,
 // however it accepts a map rather than a list of arguments for the initial
 // scan.
-func (b *Batch) MapExecCASContext(ctx context.Context, dest map[string]interface{}) (applied bool, iter *Iter, err error) {
+func (b *Batch) MapExecCASContext(
+	ctx context.Context,
+	dest map[string]interface{},
+) (applied bool, iter *Iter, err error) {
 	iter = b.session.executeBatch(b, ctx)
 	if err := iter.checkErrAndNotFound(); err != nil {
 		iter.Close()
@@ -1264,9 +1290,13 @@ func (q *Query) shouldPrepare() bool {
 }
 
 func shouldPrepare(s string) bool {
-	stmt := strings.TrimLeftFunc(strings.TrimRightFunc(s, func(r rune) bool {
-		return unicode.IsSpace(r) || r == ';'
-	}), unicode.IsSpace)
+	stmt := strings.TrimLeftFunc(
+		strings.TrimRightFunc(
+			s, func(r rune) bool {
+				return unicode.IsSpace(r) || r == ';'
+			},
+		), unicode.IsSpace,
+	)
 
 	var stmtType string
 	if n := strings.IndexFunc(stmt, unicode.IsSpace); n >= 0 {
@@ -1605,7 +1635,13 @@ type Iter struct {
 	closed int32
 }
 
-func newErrIter(err error, metrics *queryMetrics, keyspace string, routingInfo *queryRoutingInfo, getKeyspace func() string) *Iter {
+func newErrIter(
+	err error,
+	metrics *queryMetrics,
+	keyspace string,
+	routingInfo *queryRoutingInfo,
+	getKeyspace func() string,
+) *Iter {
 	iter := newIter(metrics, keyspace, routingInfo, getKeyspace)
 	iter.err = err
 	return iter
@@ -1746,7 +1782,11 @@ func (is *iterScanner) Scan(dest ...interface{}) error {
 	// currently only support scanning into an expand tuple, such that its the same
 	// as scanning in more values from a single column
 	if len(dest) != iter.meta.actualColCount {
-		return fmt.Errorf("gocql: not enough columns to scan into: have %d want %d", len(dest), iter.meta.actualColCount)
+		return fmt.Errorf(
+			"gocql: not enough columns to scan into: have %d want %d",
+			len(dest),
+			iter.meta.actualColCount,
+		)
 	}
 
 	// i is the current position in dest, could posible replace it and just use
@@ -1878,7 +1918,11 @@ func (iter *Iter) Scan(dest ...interface{}) bool {
 	// currently only support scanning into an expand tuple, such that its the same
 	// as scanning in more values from a single column
 	if len(dest) != iter.meta.actualColCount {
-		iter.err = fmt.Errorf("gocql: not enough columns to scan into: have %d want %d", len(dest), iter.meta.actualColCount)
+		iter.err = fmt.Errorf(
+			"gocql: not enough columns to scan into: have %d want %d",
+			len(dest),
+			iter.meta.actualColCount,
+		)
 		return false
 	}
 
@@ -1980,21 +2024,25 @@ type nextIter struct {
 }
 
 func (n *nextIter) fetchAsync() {
-	n.oncea.Do(func() {
-		go n.fetch()
-	})
+	n.oncea.Do(
+		func() {
+			go n.fetch()
+		},
+	)
 }
 
 func (n *nextIter) fetch() *Iter {
-	n.once.Do(func() {
-		// if the query was specifically run on a connection then re-use that
-		// connection when fetching the next results
-		if n.q.conn != nil {
-			n.next = n.q.conn.executeQuery(n.q.qryOpts.context, n.q)
-		} else {
-			n.next = n.q.session.executeQuery(n.q)
-		}
-	})
+	n.once.Do(
+		func() {
+			// if the query was specifically run on a connection then re-use that
+			// connection when fetching the next results
+			if n.q.conn != nil {
+				n.next = n.q.conn.executeQuery(n.q.qryOpts.context, n.q)
+			} else {
+				n.next = n.q.session.executeQuery(n.q)
+			}
+		},
+	)
 	return n.next
 }
 
@@ -2341,9 +2389,11 @@ func (t *traceWriter) Trace(traceId []byte) {
 		coordinator string
 		duration    int
 	)
-	iter := t.session.control.query(`SELECT coordinator, duration
+	iter := t.session.control.query(
+		`SELECT coordinator, duration
 			FROM system_traces.sessions
-			WHERE session_id = ?`, traceId)
+			WHERE session_id = ?`, traceId,
+	)
 
 	iter.Scan(&coordinator, &duration)
 	if err := iter.Close(); err != nil {
@@ -2364,16 +2414,22 @@ func (t *traceWriter) Trace(traceId []byte) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	fmt.Fprintf(t.w, "Tracing session %016x (coordinator: %s, duration: %v):\n",
-		traceId, coordinator, time.Duration(duration)*time.Microsecond)
+	fmt.Fprintf(
+		t.w, "Tracing session %016x (coordinator: %s, duration: %v):\n",
+		traceId, coordinator, time.Duration(duration)*time.Microsecond,
+	)
 
-	iter = t.session.control.query(`SELECT event_id, activity, source, source_elapsed, thread
+	iter = t.session.control.query(
+		`SELECT event_id, activity, source, source_elapsed, thread
 			FROM system_traces.events
-			WHERE session_id = ?`, traceId)
+			WHERE session_id = ?`, traceId,
+	)
 
 	for iter.Scan(&timestamp, &activity, &source, &elapsed, &thread) {
-		fmt.Fprintf(t.w, "%s: %s [%s] (source: %s, elapsed: %d)\n",
-			timestamp.Format("2006/01/02 15:04:05.999999"), activity, thread, source, elapsed)
+		fmt.Fprintf(
+			t.w, "%s: %s [%s] (source: %s, elapsed: %d)\n",
+			timestamp.Format("2006/01/02 15:04:05.999999"), activity, thread, source, elapsed,
+		)
 	}
 
 	if err := iter.Close(); err != nil {

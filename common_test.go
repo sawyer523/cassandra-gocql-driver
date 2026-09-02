@@ -39,18 +39,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/cassandra-gocql-driver/v2/lz4"
-	"github.com/apache/cassandra-gocql-driver/v2/snappy"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/lz4"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/snappy"
 )
 
 var (
-	flagCluster      = flag.String("cluster", "127.0.0.1", "a comma-separated list of host:port tuples")
-	flagProto        = flag.Int("proto", 0, "protcol version")
-	flagCQL          = flag.String("cql", "3.0.0", "CQL version")
-	flagRF           = flag.Int("rf", 1, "replication factor for test keyspace")
-	clusterSize      = flag.Int("clusterSize", 1, "the expected size of the cluster")
-	flagRetry        = flag.Int("retries", 5, "number of times to retry queries")
-	flagAutoWait     = flag.Duration("autowait", 1000*time.Millisecond, "time to wait for autodiscovery to fill the hosts poll")
+	flagCluster  = flag.String("cluster", "127.0.0.1", "a comma-separated list of host:port tuples")
+	flagProto    = flag.Int("proto", 0, "protcol version")
+	flagCQL      = flag.String("cql", "3.0.0", "CQL version")
+	flagRF       = flag.Int("rf", 1, "replication factor for test keyspace")
+	clusterSize  = flag.Int("clusterSize", 1, "the expected size of the cluster")
+	flagRetry    = flag.Int("retries", 5, "number of times to retry queries")
+	flagAutoWait = flag.Duration(
+		"autowait",
+		1000*time.Millisecond,
+		"time to wait for autodiscovery to fill the hosts poll",
+	)
 	flagRunSslTest   = flag.Bool("runssl", false, "Set to true to run ssl test")
 	flagRunAuthTest  = flag.Bool("runauth", false, "Set to true to run authentication test")
 	flagCompressTest = flag.String("compressor", "no-compression", "compressor to use")
@@ -159,11 +163,15 @@ func createKeyspaceWithRF(tb testing.TB, cluster *ClusterConfig, keyspace string
 		panic(fmt.Sprintf("unable to drop keyspace: %v", err))
 	}
 
-	err = createTable(session, fmt.Sprintf(`CREATE KEYSPACE %s
+	err = createTable(
+		session, fmt.Sprintf(
+			`CREATE KEYSPACE %s
 	WITH replication = {
 		'class' : 'SimpleStrategy',
 		'replication_factor' : %d
-	}`, keyspace, rf))
+	}`, keyspace, rf,
+		),
+	)
 
 	if err != nil {
 		panic(fmt.Sprintf("unable to create keyspace: %v", err))
@@ -173,9 +181,11 @@ func createKeyspaceWithRF(tb testing.TB, cluster *ClusterConfig, keyspace string
 func createSessionFromCluster(cluster *ClusterConfig, tb testing.TB) *Session {
 	// Drop and re-create the keyspace once. Different tests should use their own
 	// individual tables, but can assume that the table does not exist before.
-	initOnce.Do(func() {
-		createKeyspace(tb, cluster, "gocql_test")
-	})
+	initOnce.Do(
+		func() {
+			createKeyspace(tb, cluster, "gocql_test")
+		},
+	)
 
 	cluster.Keyspace = "gocql_test"
 	session, err := cluster.CreateSession()
@@ -196,12 +206,14 @@ func createSession(tb testing.TB, opts ...func(config *ClusterConfig)) *Session 
 }
 
 func createViews(t *testing.T, session *Session) {
-	if err := session.Query(`
+	if err := session.Query(
+		`
 		CREATE TYPE IF NOT EXISTS gocql_test.basicView (
 		birthday timestamp,
 		nationality text,
 		weight text,
-		height text);	`).Exec(); err != nil {
+		height text);	`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create view with err: %v", err)
 	}
 }
@@ -210,82 +222,100 @@ func createMaterializedViews(t *testing.T, session *Session) {
 	if flagCassVersion.Before(3, 0, 0) {
 		return
 	}
-	if err := session.Query(`CREATE TABLE IF NOT EXISTS gocql_test.view_table (
+	if err := session.Query(
+		`CREATE TABLE IF NOT EXISTS gocql_test.view_table (
 		    userid text,
 		    year int,
 		    month int,
-    		    PRIMARY KEY (userid));`).Exec(); err != nil {
+    		    PRIMARY KEY (userid));`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create materialized view with err: %v", err)
 	}
-	if err := session.Query(`CREATE TABLE IF NOT EXISTS gocql_test.view_table2 (
+	if err := session.Query(
+		`CREATE TABLE IF NOT EXISTS gocql_test.view_table2 (
 		    userid text,
 		    year int,
 		    month int,
-    		    PRIMARY KEY (userid));`).Exec(); err != nil {
+    		    PRIMARY KEY (userid));`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create materialized view with err: %v", err)
 	}
-	if err := session.Query(`CREATE MATERIALIZED VIEW IF NOT EXISTS gocql_test.view_view AS
+	if err := session.Query(
+		`CREATE MATERIALIZED VIEW IF NOT EXISTS gocql_test.view_view AS
 		   SELECT year, month, userid
 		   FROM gocql_test.view_table
 		   WHERE year IS NOT NULL AND month IS NOT NULL AND userid IS NOT NULL
-		   PRIMARY KEY (userid, year);`).Exec(); err != nil {
+		   PRIMARY KEY (userid, year);`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create materialized view with err: %v", err)
 	}
-	if err := session.Query(`CREATE MATERIALIZED VIEW IF NOT EXISTS gocql_test.view_view2 AS
+	if err := session.Query(
+		`CREATE MATERIALIZED VIEW IF NOT EXISTS gocql_test.view_view2 AS
 		   SELECT year, month, userid
 		   FROM gocql_test.view_table2
 		   WHERE year IS NOT NULL AND month IS NOT NULL AND userid IS NOT NULL
-		   PRIMARY KEY (userid, year);`).Exec(); err != nil {
+		   PRIMARY KEY (userid, year);`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create materialized view with err: %v", err)
 	}
 }
 
 func createFunctions(t *testing.T, session *Session) {
-	if err := session.Query(`
+	if err := session.Query(
+		`
 		CREATE OR REPLACE FUNCTION gocql_test.avgState ( state tuple<int,bigint>, val int )
 		CALLED ON NULL INPUT
 		RETURNS tuple<int,bigint>
 		LANGUAGE java AS
-		$$if (val !=null) {state.setInt(0, state.getInt(0)+1); state.setLong(1, state.getLong(1)+val.intValue());}return state;$$;	`).Exec(); err != nil {
+		$$if (val !=null) {state.setInt(0, state.getInt(0)+1); state.setLong(1, state.getLong(1)+val.intValue());}return state;$$;	`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create function with err: %v", err)
 	}
-	if err := session.Query(`
+	if err := session.Query(
+		`
 		CREATE OR REPLACE FUNCTION gocql_test.avgFinal ( state tuple<int,bigint> )
 		CALLED ON NULL INPUT
 		RETURNS double
 		LANGUAGE java AS
 		$$double r = 0; if (state.getInt(0) == 0) return null; r = state.getLong(1); r/= state.getInt(0); return Double.valueOf(r);$$
-	`).Exec(); err != nil {
+	`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create function with err: %v", err)
 	}
 }
 
 func createAggregate(t *testing.T, session *Session) {
 	createFunctions(t, session)
-	if err := session.Query(`
+	if err := session.Query(
+		`
 		CREATE OR REPLACE AGGREGATE gocql_test.average(int)
 		SFUNC avgState
 		STYPE tuple<int,bigint>
 		FINALFUNC avgFinal
 		INITCOND (0,0);
-	`).Exec(); err != nil {
+	`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create aggregate with err: %v", err)
 	}
-	if err := session.Query(`
+	if err := session.Query(
+		`
 		CREATE OR REPLACE AGGREGATE gocql_test.average2(int)
 		SFUNC avgState
 		STYPE tuple<int,bigint>
 		FINALFUNC avgFinal
 		INITCOND (0,0);
-	`).Exec(); err != nil {
+	`,
+	).Exec(); err != nil {
 		t.Fatalf("failed to create aggregate with err: %v", err)
 	}
 }
 
 func staticAddressTranslator(newAddr net.IP, newPort int) AddressTranslator {
-	return AddressTranslatorFunc(func(addr net.IP, port int) (net.IP, int) {
-		return newAddr, newPort
-	})
+	return AddressTranslatorFunc(
+		func(addr net.IP, port int) (net.IP, int) {
+			return newAddr, newPort
+		},
+	)
 }
 
 func assertTrue(t *testing.T, description string, value bool) {

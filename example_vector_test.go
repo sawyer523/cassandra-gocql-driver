@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"log"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 // Example_vector demonstrates how to work with vector search in Cassandra 5.0+.
@@ -54,20 +54,24 @@ func Example_vector() {
 	ctx := context.Background()
 
 	// Create the table first (if it doesn't exist)
-	err = session.Query(`CREATE TABLE IF NOT EXISTS example.vectors(
+	err = session.Query(
+		`CREATE TABLE IF NOT EXISTS example.vectors(
 		id int, 
 		item_name text, 
 		embedding vector<float, 5>, 
 		PRIMARY KEY(id)
-	)`).ExecContext(ctx)
+	)`,
+	).ExecContext(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Create SAI index for vector search (required for ANN search)
 	fmt.Println("Creating SAI index for vector search...")
-	err = session.Query(`CREATE INDEX IF NOT EXISTS ann_index 
-		ON example.vectors(embedding) USING 'sai'`).ExecContext(ctx)
+	err = session.Query(
+		`CREATE INDEX IF NOT EXISTS ann_index 
+		ON example.vectors(embedding) USING 'sai'`,
+	).ExecContext(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -92,8 +96,10 @@ func Example_vector() {
 	// Insert all vectors
 	fmt.Println("Inserting sample vectors...")
 	for _, item := range vectorData {
-		err = session.Query("INSERT INTO example.vectors (id, item_name, embedding) VALUES (?, ?, ?)",
-			item.id, item.name, item.vector).ExecContext(ctx)
+		err = session.Query(
+			"INSERT INTO example.vectors (id, item_name, embedding) VALUES (?, ?, ?)",
+			item.id, item.name, item.vector,
+		).ExecContext(ctx)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -106,7 +112,8 @@ func Example_vector() {
 	// Perform ANN (Approximate Nearest Neighbor) search using ORDER BY ... ANN OF
 	// This finds the 3 most similar vectors to our query vector
 	fmt.Println("Top 3 most similar items (using ANN search):")
-	iter := session.Query(`
+	iter := session.Query(
+		`
 		SELECT id, item_name, embedding
 		FROM example.vectors 
 		ORDER BY embedding ANN OF ? 
@@ -135,7 +142,8 @@ func Example_vector() {
 	fmt.Printf("Searching for vectors similar to: %v\n", queryVector2)
 	fmt.Println("Top 4 most similar items:")
 
-	scanner := session.Query(`
+	scanner := session.Query(
+		`
 		SELECT id, item_name, embedding
 		FROM example.vectors 
 		ORDER BY embedding ANN OF ? 
