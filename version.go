@@ -27,7 +27,7 @@ package gocql
 import "runtime/debug"
 
 const (
-	defaultDriverName = "github.com/apache/cassandra-gocql-driver"
+	defaultDriverName = "github.com/sawyer523/cassandra-gocql-driver"
 
 	// This string MUST have this value since we explicitly test against the
 	// current main package returned by runtime/debug below.  Also note the

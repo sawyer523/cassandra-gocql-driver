@@ -35,7 +35,7 @@
 //
 //	import (
 //		"github.com/sawyer523/cassandra-gocql-driver/v2"
-//		"github.com/apache/cassandra-gocql-driver/v2/lz4"
+//		"github.com/sawyer523/cassandra-gocql-driver/v2/lz4"
 //	)
 //
 //	cluster := gocql.NewCluster("127.0.0.1")
@@ -69,4 +69,4 @@
 //
 // For optimal performance, benchmark both LZ4 and Snappy with your specific
 // workload, though LZ4 is typically a good starting point.
-package lz4 // import "github.com/apache/cassandra-gocql-driver/v2/lz4"
+package lz4 // import "github.com/sawyer523/cassandra-gocql-driver/v2/lz4"

@@ -34,8 +34,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/apache/cassandra-gocql-driver/v2/lz4"
-	"github.com/apache/cassandra-gocql-driver/v2/snappy"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/lz4"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/snappy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -348,37 +348,39 @@ func Test_readUncompressedFrame(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			framer := newFramer(nil, protoVersion5, GlobalTypes)
-			req := writeQueryFrame{
-				statement: "SELECT * FROM system.local",
-				params: queryParams{
-					consistency: Quorum,
-					keyspace:    "gocql_test",
-				},
-			}
+		t.Run(
+			tt.name, func(t *testing.T) {
+				framer := newFramer(nil, protoVersion5, GlobalTypes)
+				req := writeQueryFrame{
+					statement: "SELECT * FROM system.local",
+					params: queryParams{
+						consistency: Quorum,
+						keyspace:    "gocql_test",
+					},
+				}
 
-			err := req.buildFrame(framer, 128)
-			require.NoError(t, err)
-
-			frame, err := newUncompressedSegment(framer.buf, true)
-			require.NoError(t, err)
-
-			if tt.modifyFrame != nil {
-				frame = tt.modifyFrame(frame)
-			}
-
-			readFrame, isSelfContained, err := readUncompressedSegment(bytes.NewReader(frame))
-
-			if tt.expectedErr != "" {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.expectedErr)
-			} else {
+				err := req.buildFrame(framer, 128)
 				require.NoError(t, err)
-				assert.True(t, isSelfContained)
-				assert.Equal(t, framer.buf, readFrame)
-			}
-		})
+
+				frame, err := newUncompressedSegment(framer.buf, true)
+				require.NoError(t, err)
+
+				if tt.modifyFrame != nil {
+					frame = tt.modifyFrame(frame)
+				}
+
+				readFrame, isSelfContained, err := readUncompressedSegment(bytes.NewReader(frame))
+
+				if tt.expectedErr != "" {
+					require.Error(t, err)
+					require.Contains(t, err.Error(), tt.expectedErr)
+				} else {
+					require.NoError(t, err)
+					assert.True(t, isSelfContained)
+					assert.Equal(t, framer.buf, readFrame)
+				}
+			},
+		)
 	}
 }
 
@@ -459,40 +461,42 @@ func Test_readCompressedFrame(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			framer := newFramer(nil, protoVersion5, GlobalTypes)
-			req := writeQueryFrame{
-				statement: "SELECT * FROM system.local",
-				params: queryParams{
-					consistency: Quorum,
-					keyspace:    "gocql_test",
-				},
-			}
+		t.Run(
+			tt.name, func(t *testing.T) {
+				framer := newFramer(nil, protoVersion5, GlobalTypes)
+				req := writeQueryFrame{
+					statement: "SELECT * FROM system.local",
+					params: queryParams{
+						consistency: Quorum,
+						keyspace:    "gocql_test",
+					},
+				}
 
-			err := req.buildFrame(framer, 128)
-			require.NoError(t, err)
-
-			frame, err := newCompressedSegment(framer.buf, true, testMockedCompressor{})
-			require.NoError(t, err)
-
-			if tt.modifyFrameFn != nil {
-				frame = tt.modifyFrameFn(frame)
-			}
-
-			readFrame, selfContained, err := readCompressedSegment(bytes.NewReader(frame), tt.compressor)
-
-			switch {
-			case tt.expectedErrorMsg != "":
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.expectedErrorMsg)
-			case tt.compressor.expectedError != nil:
-				require.ErrorIs(t, err, tt.compressor.expectedError)
-			default:
+				err := req.buildFrame(framer, 128)
 				require.NoError(t, err)
-				assert.True(t, selfContained)
-				assert.Equal(t, framer.buf, readFrame)
-			}
-		})
+
+				frame, err := newCompressedSegment(framer.buf, true, testMockedCompressor{})
+				require.NoError(t, err)
+
+				if tt.modifyFrameFn != nil {
+					frame = tt.modifyFrameFn(frame)
+				}
+
+				readFrame, selfContained, err := readCompressedSegment(bytes.NewReader(frame), tt.compressor)
+
+				switch {
+				case tt.expectedErrorMsg != "":
+					require.Error(t, err)
+					require.Contains(t, err.Error(), tt.expectedErrorMsg)
+				case tt.compressor.expectedError != nil:
+					require.ErrorIs(t, err, tt.compressor.expectedError)
+				default:
+					require.NoError(t, err)
+					assert.True(t, selfContained)
+					assert.Equal(t, framer.buf, readFrame)
+				}
+			},
+		)
 	}
 }
 
@@ -784,23 +788,25 @@ func TestFrameReadTypeInfo(t *testing.T) {
 
 	// org.apache.cassandra.db.marshal.VectorType(%s, 2)
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			f := newFramer(nil, 4, GlobalTypes)
-			f.writeShort(uint16(test.typ))
-			if test.typ == TypeCustom {
-				f.writeString(test.custom)
-			} else if test.more != nil {
-				test.more(f)
-			}
-			parsedType, err := f.readTypeInfo()
-			require.NoError(t, err)
-			if len(f.buf) != 0 {
-				t.Errorf("frame's buffer was not empty after readTypeInfo: %d left", len(f.buf))
-			}
-			if !reflect.DeepEqual(test.expected, parsedType) {
-				t.Errorf("expected (%#v) but was (%#v) instead", test.expected, parsedType)
-			}
-		})
+		t.Run(
+			test.name, func(t *testing.T) {
+				f := newFramer(nil, 4, GlobalTypes)
+				f.writeShort(uint16(test.typ))
+				if test.typ == TypeCustom {
+					f.writeString(test.custom)
+				} else if test.more != nil {
+					test.more(f)
+				}
+				parsedType, err := f.readTypeInfo()
+				require.NoError(t, err)
+				if len(f.buf) != 0 {
+					t.Errorf("frame's buffer was not empty after readTypeInfo: %d left", len(f.buf))
+				}
+				if !reflect.DeepEqual(test.expected, parsedType) {
+					t.Errorf("expected (%#v) but was (%#v) instead", test.expected, parsedType)
+				}
+			},
+		)
 	}
 }
 
@@ -887,10 +893,12 @@ func Test_newFrame_compressionFlag(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			f := newFramer(test.compressor, byte(test.protoVersion), GlobalTypes)
-			require.Equal(t, test.expectedFlags, f.flags)
-		})
+		t.Run(
+			test.name, func(t *testing.T) {
+				f := newFramer(test.compressor, byte(test.protoVersion), GlobalTypes)
+				require.Equal(t, test.expectedFlags, f.flags)
+			},
+		)
 	}
 }
 
@@ -1100,16 +1108,18 @@ func TestParseErrorFrameDedicatedTypes(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			f := newErrorFrameForTest(tt.code, tt.msg)
+		t.Run(
+			tt.name, func(t *testing.T) {
+				f := newErrorFrameForTest(tt.code, tt.msg)
 
-			got, err := f.parseErrorFrame()
-			if err != nil {
-				t.Fatalf("parseErrorFrame returned error: %v", err)
-			}
+				got, err := f.parseErrorFrame()
+				if err != nil {
+					t.Fatalf("parseErrorFrame returned error: %v", err)
+				}
 
-			tt.assertT(t, got)
-		})
+				tt.assertT(t, got)
+			},
+		)
 	}
 }
 
@@ -1129,21 +1139,23 @@ func TestParseErrorFrameAllGenericCodes(t *testing.T) {
 	}
 
 	for _, tc := range codes {
-		t.Run(tc.name, func(t *testing.T) {
-			f := newErrorFrameForTest(tc.code, "test message")
+		t.Run(
+			tc.name, func(t *testing.T) {
+				f := newErrorFrameForTest(tc.code, "test message")
 
-			got, err := f.parseErrorFrame()
-			if err != nil {
-				t.Fatalf("parseErrorFrame returned error: %v", err)
-			}
+				got, err := f.parseErrorFrame()
+				if err != nil {
+					t.Fatalf("parseErrorFrame returned error: %v", err)
+				}
 
-			reqErr, ok := got.(RequestError)
-			if !ok {
-				t.Fatalf("expected RequestError, got %T", got)
-			}
-			if reqErr.Code() != tc.code {
-				t.Fatalf("expected code %x, got %x", tc.code, reqErr.Code())
-			}
-		})
+				reqErr, ok := got.(RequestError)
+				if !ok {
+					t.Fatalf("expected RequestError, got %T", got)
+				}
+				if reqErr.Code() != tc.code {
+					t.Fatalf("expected code %x, got %x", tc.code, reqErr.Code())
+				}
+			},
+		)
 	}
 }

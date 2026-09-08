@@ -202,8 +202,8 @@ cluster.Compressor = &gocql.SnappyCompressor{}
 import "github.com/gocql/gocql/lz4"
 
 // NEW (v2.x) - Both are now packages within the main module
-import "github.com/apache/cassandra-gocql-driver/v2/snappy"
-import "github.com/apache/cassandra-gocql-driver/v2/lz4"
+import "github.com/sawyer523/cassandra-gocql-driver/v2/snappy"
+import "github.com/sawyer523/cassandra-gocql-driver/v2/lz4"
 
 cluster.Compressor = &snappy.SnappyCompressor{}  // ✅ New package syntax
 cluster.Compressor = &lz4.LZ4Compressor{}        // ✅ New package syntax
@@ -218,7 +218,7 @@ The `HostPoolHostPolicy` function has been moved from the main gocql package to 
 cluster.PoolConfig.HostSelectionPolicy = gocql.HostPoolHostPolicy(hostpool.New(nil))  // ❌ undefined: gocql.HostPoolHostPolicy
 
 // NEW (v2.x) - Import from hostpool package
-import "github.com/apache/cassandra-gocql-driver/v2/hostpool"
+import "github.com/sawyer523/cassandra-gocql-driver/v2/hostpool"
 cluster.PoolConfig.HostSelectionPolicy = hostpool.HostPoolHostPolicy(hostpool.New(nil))
 ```
 
@@ -230,9 +230,9 @@ import "github.com/gocql/gocql/lz4"  // Was separate module
 
 // NEW (v2.x)
 import "github.com/sawyer523/cassandra-gocql-driver/v2"
-import "github.com/apache/cassandra-gocql-driver/v2/snappy"  // Now package
-import "github.com/apache/cassandra-gocql-driver/v2/lz4"     // Now package
-import "github.com/apache/cassandra-gocql-driver/v2/hostpool"  // For HostPoolHostPolicy
+import "github.com/sawyer523/cassandra-gocql-driver/v2/snappy"  // Now package
+import "github.com/sawyer523/cassandra-gocql-driver/v2/lz4"     // Now package
+import "github.com/sawyer523/cassandra-gocql-driver/v2/hostpool"  // For HostPoolHostPolicy
 ```
 
 #### Removed Global Functions

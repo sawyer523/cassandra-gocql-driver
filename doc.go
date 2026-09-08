@@ -208,13 +208,13 @@
 //
 // For Snappy compression (via [github.com/apache/cassandra-gocql-driver/v2/snappy] package):
 //
-//	import "github.com/apache/cassandra-gocql-driver/v2/snappy"
+//	import "github.com/sawyer523/cassandra-gocql-driver/v2/snappy"
 //
 //	cluster.Compressor = &snappy.SnappyCompressor{}
 //
 // For LZ4 compression (via [github.com/apache/cassandra-gocql-driver/v2/lz4] package):
 //
-//	import "github.com/apache/cassandra-gocql-driver/v2/lz4"
+//	import "github.com/sawyer523/cassandra-gocql-driver/v2/lz4"
 //
 //	cluster.Compressor = &lz4.LZ4Compressor{}
 //
@@ -227,14 +227,14 @@
 //
 // For Zap logger (via [github.com/apache/cassandra-gocql-driver/v2/gocqlzap] package):
 //
-//	import "github.com/apache/cassandra-gocql-driver/v2/gocqlzap"
+//	import "github.com/sawyer523/cassandra-gocql-driver/v2/gocqlzap"
 //
 //	zapLogger, _ := zap.NewProduction()
 //	cluster.Logger = gocqlzap.NewZapLogger(zapLogger)
 //
 // For Zerolog (via [github.com/apache/cassandra-gocql-driver/v2/gocqlzerolog] package):
 //
-//	import "github.com/apache/cassandra-gocql-driver/v2/gocqlzerolog"
+//	import "github.com/sawyer523/cassandra-gocql-driver/v2/gocqlzerolog"
 //
 //	zerologLogger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 //	cluster.Logger = gocqlzerolog.NewZerologLogger(&zerologLogger)
