@@ -40,8 +40,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/apache/cassandra-gocql-driver/v2/internal/lru"
-	"github.com/apache/cassandra-gocql-driver/v2/internal/streams"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/lru"
+	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/streams"
 )
 
 // approve the authenticator with the list of allowed authenticators. If the provided list is empty,
@@ -123,7 +123,7 @@ type SslOptions struct {
 	// client certificate
 	CertPath string
 	KeyPath  string
-	CaPath   string //optional depending on server config
+	CaPath   string // optional depending on server config
 	// If you want to verify the hostname and server cert (like a wildcard for cass cluster) then you should turn this
 	// on.
 	// This option is basically the inverse of tls.Config.InsecureSkipVerify.
@@ -212,7 +212,12 @@ func (s *Session) connect(ctx context.Context, host *HostInfo, errorHandler Conn
 }
 
 // dial establishes a connection to a Cassandra node and notifies the session's connectObserver.
-func (s *Session) dial(ctx context.Context, host *HostInfo, connConfig *ConnConfig, errorHandler ConnErrorHandler) (*Conn, error) {
+func (s *Session) dial(
+	ctx context.Context,
+	host *HostInfo,
+	connConfig *ConnConfig,
+	errorHandler ConnErrorHandler,
+) (*Conn, error) {
 	var obs ObservedConnect
 	if s.connectObserver != nil {
 		obs.Host = host
@@ -233,7 +238,12 @@ func (s *Session) dial(ctx context.Context, host *HostInfo, connConfig *ConnConf
 // dialWithoutObserver establishes connection to a Cassandra node.
 //
 // dialWithoutObserver does not notify the connection observer, so you most probably want to call dial() instead.
-func (s *Session) dialWithoutObserver(ctx context.Context, host *HostInfo, cfg *ConnConfig, errorHandler ConnErrorHandler) (*Conn, error) {
+func (s *Session) dialWithoutObserver(
+	ctx context.Context,
+	host *HostInfo,
+	cfg *ConnConfig,
+	errorHandler ConnErrorHandler,
+) (*Conn, error) {
 	dialedHost, err := cfg.HostDialer.DialHost(ctx, host)
 	if err != nil {
 		return nil, err
@@ -429,7 +439,11 @@ func (s *startupCoordinator) checkProtocolRelatedError(err error) bool {
 	}
 }
 
-func (s *startupCoordinator) write(ctx context.Context, frame frameBuilder, startupCompleted *atomic.Bool) (frame, error) {
+func (s *startupCoordinator) write(
+	ctx context.Context,
+	frame frameBuilder,
+	startupCompleted *atomic.Bool,
+) (frame, error) {
 	select {
 	case s.frameTicker <- struct{}{}:
 	case <-ctx.Done():
@@ -460,7 +474,11 @@ func (s *startupCoordinator) options(ctx context.Context, startupCompleted *atom
 	}
 }
 
-func (s *startupCoordinator) startup(ctx context.Context, supported map[string][]string, startupCompleted *atomic.Bool) error {
+func (s *startupCoordinator) startup(
+	ctx context.Context,
+	supported map[string][]string,
+	startupCompleted *atomic.Bool,
+) error {
 	m := map[string]string{
 		"CQL_VERSION":    s.conn.cfg.CQLVersion,
 		"DRIVER_NAME":    driverName,
@@ -503,7 +521,11 @@ func (s *startupCoordinator) startup(ctx context.Context, supported map[string][
 	}
 }
 
-func (s *startupCoordinator) authenticateHandshake(ctx context.Context, authFrame *authenticateFrame, startupCompleted *atomic.Bool) error {
+func (s *startupCoordinator) authenticateHandshake(
+	ctx context.Context,
+	authFrame *authenticateFrame,
+	startupCompleted *atomic.Bool,
+) error {
 	if s.conn.auth == nil {
 		return fmt.Errorf("authentication required (using %q)", authFrame.class)
 	}
@@ -574,11 +596,15 @@ func (c *Conn) closeWithError(err error) {
 		case <-req.timeout:
 		}
 		if req.streamObserverContext != nil {
-			req.streamObserverEndOnce.Do(func() {
-				req.streamObserverContext.StreamAbandoned(ObservedStream{
-					Host: c.host,
-				})
-			})
+			req.streamObserverEndOnce.Do(
+				func() {
+					req.streamObserverContext.StreamAbandoned(
+						ObservedStream{
+							Host: c.host,
+						},
+					)
+				},
+			)
 		}
 	}
 
@@ -710,16 +736,18 @@ func (c *Conn) processFrame(ctx context.Context, r io.Reader) error {
 	}
 
 	if c.frameObserver != nil {
-		c.frameObserver.ObserveFrameHeader(context.Background(), ObservedFrameHeader{
-			Version: protoVersion(head.version),
-			Flags:   head.flags,
-			Stream:  int16(head.stream),
-			Opcode:  frameOp(head.op),
-			Length:  int32(head.length),
-			Start:   headStartTime,
-			End:     headEndTime,
-			Host:    c.host,
-		})
+		c.frameObserver.ObserveFrameHeader(
+			context.Background(), ObservedFrameHeader{
+				Version: protoVersion(head.version),
+				Flags:   head.flags,
+				Stream:  int16(head.stream),
+				Opcode:  frameOp(head.op),
+				Length:  int32(head.length),
+				Start:   headStartTime,
+				End:     headEndTime,
+				Host:    c.host,
+			},
+		)
 	}
 
 	if head.stream > c.streams.NumStreams {
@@ -759,7 +787,10 @@ func (c *Conn) processFrame(ctx context.Context, r io.Reader) error {
 	delete(c.calls, head.stream)
 	c.mu.Unlock()
 	if call == nil || !ok {
-		c.logger.Warning("Received response for stream which has no handler.", NewLogFieldString("header", head.String()))
+		c.logger.Warning(
+			"Received response for stream which has no handler.",
+			NewLogFieldString("header", head.String()),
+		)
 		return c.discardFrame(r, head)
 	} else if head.stream != call.streamID {
 		panic(fmt.Sprintf("call has incorrect streamID: got %d expected %d", call.streamID, head.stream))
@@ -796,11 +827,15 @@ func (c *Conn) releaseStream(call *callReq) {
 	c.streams.Clear(call.streamID)
 
 	if call.streamObserverContext != nil {
-		call.streamObserverEndOnce.Do(func() {
-			call.streamObserverContext.StreamFinished(ObservedStream{
-				Host: c.host,
-			})
-		})
+		call.streamObserverEndOnce.Do(
+			func() {
+				call.streamObserverContext.StreamFinished(
+					ObservedStream{
+						Host: c.host,
+					},
+				)
+			},
+		)
 	}
 }
 
@@ -1062,8 +1097,10 @@ func (c *deadlineContextWriter) writeContext(ctx context.Context, p []byte) (int
 	return c.w.Write(p)
 }
 
-func newWriteCoalescer(conn deadlineWriter, writeTimeout, coalesceDuration time.Duration,
-	quit <-chan struct{}) *writeCoalescer {
+func newWriteCoalescer(
+	conn deadlineWriter, writeTimeout, coalesceDuration time.Duration,
+	quit <-chan struct{},
+) *writeCoalescer {
 	wc := &writeCoalescer{
 		writeCh: make(chan writeRequest),
 		c:       conn,
@@ -1225,8 +1262,10 @@ func (c *Conn) addCall(call *callReq) error {
 	}
 	existingCall := c.calls[call.streamID]
 	if existingCall != nil {
-		return fmt.Errorf("attempting to use stream already in use: %d -> %d", call.streamID,
-			existingCall.streamID)
+		return fmt.Errorf(
+			"attempting to use stream already in use: %d -> %d", call.streamID,
+			existingCall.streamID,
+		)
 	}
 	c.calls[call.streamID] = call
 	return nil
@@ -1236,7 +1275,12 @@ func (c *Conn) exec(ctx context.Context, req frameBuilder, tracer Tracer) (*fram
 	return c.execInternal(ctx, req, tracer, true)
 }
 
-func (c *Conn) execInternal(ctx context.Context, req frameBuilder, tracer Tracer, startupCompleted bool) (*framer, error) {
+func (c *Conn) execInternal(
+	ctx context.Context,
+	req frameBuilder,
+	tracer Tracer,
+	startupCompleted bool,
+) (*framer, error) {
 	if ctxErr := ctx.Err(); ctxErr != nil {
 		return nil, ctxErr
 	}
@@ -1273,9 +1317,11 @@ func (c *Conn) execInternal(ctx context.Context, req frameBuilder, tracer Tracer
 	}
 
 	if call.streamObserverContext != nil {
-		call.streamObserverContext.StreamStarted(ObservedStream{
-			Host: c.host,
-		})
+		call.streamObserverContext.StreamStarted(
+			ObservedStream{
+				Host: c.host,
+			},
+		)
 	}
 
 	err := req.buildFrame(framer, stream)
@@ -1379,8 +1425,10 @@ func (c *Conn) execInternal(ctx context.Context, req frameBuilder, tracer Tracer
 			errProtocol := NewErrProtocol("unexpected protocol version in response: got %d expected %d", v, c.version)
 			responseFrame, err := resp.framer.parseFrame()
 			if err != nil {
-				c.logger.Warning("Framer error while attempting to parse potential protocol error.",
-					NewLogFieldError("err", err))
+				c.logger.Warning(
+					"Framer error while attempting to parse potential protocol error.",
+					NewLogFieldError("err", err),
+				)
 				return nil, errProtocol
 			}
 			//goland:noinspection GoTypeAssertionOnErrors
@@ -1388,26 +1436,34 @@ func (c *Conn) execInternal(ctx context.Context, req frameBuilder, tracer Tracer
 			if !isErrFrame || errFrame.Code() != ErrCodeProtocol {
 				return nil, errProtocol
 			}
-			return nil, NewErrProtocol("%w", &protocolError{
-				errFrame,
-			})
+			return nil, NewErrProtocol(
+				"%w", &protocolError{
+					errFrame,
+				},
+			)
 		}
 
 		return resp.framer, nil
 	case <-timeoutCh:
 		close(call.timeout)
-		c.logger.Debug("Request timed out on connection.",
-			NewLogFieldString("host_id", c.host.HostID()), NewLogFieldIP("addr", c.host.ConnectAddress()))
+		c.logger.Debug(
+			"Request timed out on connection.",
+			NewLogFieldString("host_id", c.host.HostID()), NewLogFieldIP("addr", c.host.ConnectAddress()),
+		)
 		return nil, ErrTimeoutNoResponse
 	case <-ctxDone:
-		c.logger.Debug("Request failed because context elapsed out on connection.",
+		c.logger.Debug(
+			"Request failed because context elapsed out on connection.",
 			NewLogFieldString("host_id", c.host.HostID()), NewLogFieldIP("addr", c.host.ConnectAddress()),
-			NewLogFieldError("ctx_err", ctx.Err()))
+			NewLogFieldError("ctx_err", ctx.Err()),
+		)
 		close(call.timeout)
 		return nil, ctx.Err()
 	case <-c.ctx.Done():
-		c.logger.Debug("Request failed because connection closed.",
-			NewLogFieldString("host_id", c.host.HostID()), NewLogFieldIP("addr", c.host.ConnectAddress()))
+		c.logger.Debug(
+			"Request failed because connection closed.",
+			NewLogFieldString("host_id", c.host.HostID()), NewLogFieldIP("addr", c.host.ConnectAddress()),
+		)
 		close(call.timeout)
 		return nil, ErrConnectionClosed
 	}
@@ -1473,15 +1529,22 @@ type inflightPrepare struct {
 	preparedStatment *preparedStatment
 }
 
-func (c *Conn) prepareStatement(ctx context.Context, stmt string, tracer Tracer, keyspace string) (*preparedStatment, error) {
+func (c *Conn) prepareStatement(
+	ctx context.Context,
+	stmt string,
+	tracer Tracer,
+	keyspace string,
+) (*preparedStatment, error) {
 	stmtCacheKey := c.session.stmtsLRU.keyFor(c.host.HostID(), keyspace, stmt)
-	flight, ok := c.session.stmtsLRU.execIfMissing(stmtCacheKey, func(lru *lru.Cache) *inflightPrepare {
-		flight := &inflightPrepare{
-			done: make(chan struct{}),
-		}
-		lru.Add(stmtCacheKey, flight)
-		return flight
-	})
+	flight, ok := c.session.stmtsLRU.execIfMissing(
+		stmtCacheKey, func(lru *lru.Cache) *inflightPrepare {
+			flight := &inflightPrepare{
+				done: make(chan struct{}),
+			}
+			lru.Add(stmtCacheKey, flight)
+			return flight
+		},
+	)
 
 	if !ok {
 		go func() {
@@ -1615,12 +1678,14 @@ func (c *Conn) executeQuery(ctx context.Context, q *internalQuery) *Iter {
 
 		values := qryOpts.values
 		if qryOpts.binding != nil {
-			values, err = qryOpts.binding(&QueryInfo{
-				Id:          info.id,
-				Args:        info.request.columns,
-				Rval:        info.response.columns,
-				PKeyColumns: info.request.pkeyColumns,
-			})
+			values, err = qryOpts.binding(
+				&QueryInfo{
+					Id:          info.id,
+					Args:        info.request.columns,
+					Rval:        info.response.columns,
+					PKeyColumns: info.request.pkeyColumns,
+				},
+			)
 
 			if err != nil {
 				iter.err = err
@@ -1726,7 +1791,13 @@ func (c *Conn) executeQuery(ctx context.Context, q *internalQuery) *Iter {
 				iter.meta = info.response
 				iter.meta.pagingState = copyBytes(x.meta.pagingState)
 			} else {
-				iter = newErrIter(errors.New("gocql: did not receive metadata but prepared info is nil"), q.metrics, q.Keyspace(), q.routingInfo, q.qryOpts.getKeyspace)
+				iter = newErrIter(
+					errors.New("gocql: did not receive metadata but prepared info is nil"),
+					q.metrics,
+					q.Keyspace(),
+					q.routingInfo,
+					q.qryOpts.getKeyspace,
+				)
 				iter.framer = framer
 				return iter
 			}
@@ -1763,7 +1834,10 @@ func (c *Conn) executeQuery(ctx context.Context, q *internalQuery) *Iter {
 		iter.framer = framer
 		if err := c.awaitSchemaAgreement(ctx); err != nil {
 			// TODO: should have this behind a flag
-			c.logger.Warning("Error while awaiting for schema agreement after a schema change event.", NewLogFieldError("err", err))
+			c.logger.Warning(
+				"Error while awaiting for schema agreement after a schema change event.",
+				NewLogFieldError("err", err),
+			)
 		}
 		// dont return an error from this, might be a good idea to give a warning
 		// though. The impact of this returning an error would be that the cluster
@@ -1884,12 +1958,14 @@ func (c *Conn) executeBatch(ctx context.Context, b *internalBatch) *Iter {
 			if entry.binding == nil {
 				values = entry.Args
 			} else {
-				values, err = entry.binding(&QueryInfo{
-					Id:          info.id,
-					Args:        info.request.columns,
-					Rval:        info.response.columns,
-					PKeyColumns: info.request.pkeyColumns,
-				})
+				values, err = entry.binding(
+					&QueryInfo{
+						Id:          info.id,
+						Args:        info.request.columns,
+						Rval:        info.response.columns,
+						PKeyColumns: info.request.pkeyColumns,
+					},
+				)
 				if err != nil {
 					iter.err = err
 					return iter
@@ -1897,7 +1973,12 @@ func (c *Conn) executeBatch(ctx context.Context, b *internalBatch) *Iter {
 			}
 
 			if len(values) != info.request.actualColCount {
-				iter.err = fmt.Errorf("gocql: batch statement %d expected %d values send got %d", i, info.request.actualColCount, len(values))
+				iter.err = fmt.Errorf(
+					"gocql: batch statement %d expected %d values send got %d",
+					i,
+					info.request.actualColCount,
+					len(values),
+				)
 				return iter
 			}
 
@@ -1989,7 +2070,10 @@ func (c *Conn) querySystemPeers(ctx context.Context, version cassVersion) *Iter 
 		err := iter.checkErrAndNotFound()
 		if err != nil {
 			var requestErr RequestError
-			if errors.As(err, &requestErr) && requestErr.Code() == ErrCodeInvalid { // system.peers_v2 not found, try system.peers
+			if errors.As(
+				err,
+				&requestErr,
+			) && requestErr.Code() == ErrCodeInvalid { // system.peers_v2 not found, try system.peers
 				c.mu.Lock()
 				c.isSchemaV2 = false
 				c.mu.Unlock()
@@ -2038,7 +2122,10 @@ func (c *Conn) awaitSchemaAgreementWithTimeout(ctx context.Context, timeout time
 				goto cont
 			}
 			if !isValidPeer(host) || host.schemaVersion == "" {
-				c.logger.Warning("Invalid peer or peer with empty schema_version.", NewLogFieldIP("peer", host.ConnectAddress()))
+				c.logger.Warning(
+					"Invalid peer or peer with empty schema_version.",
+					NewLogFieldIP("peer", host.ConnectAddress()),
+				)
 				continue
 			}
 

@@ -29,7 +29,7 @@ import (
 	"log"
 	"sync"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 // SchemaStateListener implements schema listener interfaces and SessionReadyListener
@@ -152,8 +152,10 @@ func (l *HostStateListener) OnSessionReady(session *gocql.Session) {
 
 	for _, host := range hosts {
 		l.hosts[host.HostID()] = host
-		fmt.Printf("  Initial host: %s (id: %s, datacenter: %s, rack: %s, state: %s)\n",
-			host.ConnectAddress(), host.HostID(), host.DataCenter(), host.Rack(), host.State())
+		fmt.Printf(
+			"  Initial host: %s (id: %s, datacenter: %s, rack: %s, state: %s)\n",
+			host.ConnectAddress(), host.HostID(), host.DataCenter(), host.Rack(), host.State(),
+		)
 	}
 }
 
@@ -162,16 +164,20 @@ func (l *HostStateListener) OnNewHost(event gocql.NewHostEvent) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.hosts[event.Host.HostID()] = event.Host
-	fmt.Printf("Host Event: New host added: %s (id: %s, datacenter: %s, rack: %s)\n",
-		event.Host.ConnectAddress(), event.Host.HostID(), event.Host.DataCenter(), event.Host.Rack())
+	fmt.Printf(
+		"Host Event: New host added: %s (id: %s, datacenter: %s, rack: %s)\n",
+		event.Host.ConnectAddress(), event.Host.HostID(), event.Host.DataCenter(), event.Host.Rack(),
+	)
 }
 
 func (l *HostStateListener) OnRemovedHost(event gocql.RemovedHostEvent) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	delete(l.hosts, event.Host.HostID())
-	fmt.Printf("Host Event: Host removed: %s (id: %s)\n",
-		event.Host.ConnectAddress(), event.Host.HostID())
+	fmt.Printf(
+		"Host Event: Host removed: %s (id: %s)\n",
+		event.Host.ConnectAddress(), event.Host.HostID(),
+	)
 }
 
 // Host state change events
@@ -179,15 +185,19 @@ func (l *HostStateListener) OnHostUp(event gocql.HostUpEvent) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.hosts[event.Host.HostID()] = event.Host
-	fmt.Printf("Host Event: Host up: %s (id: %s)\n",
-		event.Host.ConnectAddress(), event.Host.HostID())
+	fmt.Printf(
+		"Host Event: Host up: %s (id: %s)\n",
+		event.Host.ConnectAddress(), event.Host.HostID(),
+	)
 }
 
 func (l *HostStateListener) OnHostDown(event gocql.HostDownEvent) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	fmt.Printf("Host Event: Host down: %s (id: %s)\n",
-		event.Host.ConnectAddress(), event.Host.HostID())
+	fmt.Printf(
+		"Host Event: Host down: %s (id: %s)\n",
+		event.Host.ConnectAddress(), event.Host.HostID(),
+	)
 }
 
 // Example_eventListeners demonstrates how to implement and use SchemaListener and HostListener

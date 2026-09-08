@@ -31,7 +31,7 @@ import (
 	"strconv"
 	"strings"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 // MyMarshaler implements Marshaler and Unmarshaler.
@@ -94,8 +94,10 @@ func Example_marshalerUnmarshaler() {
 		minor: 2,
 		patch: 3,
 	}
-	err = session.Query("INSERT INTO example.my_marshaler_table (pk, value) VALUES (?, ?)",
-		1, value).ExecContext(ctx)
+	err = session.Query(
+		"INSERT INTO example.my_marshaler_table (pk, value) VALUES (?, ?)",
+		1, value,
+	).ExecContext(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

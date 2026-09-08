@@ -29,7 +29,7 @@ import (
 	"fmt"
 	"log"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 func Example() {
@@ -51,8 +51,10 @@ func Example() {
 	ctx := context.Background()
 
 	// insert a tweet
-	if err := session.Query(`INSERT INTO tweet (timeline, id, text) VALUES (?, ?, ?)`,
-		"me", gocql.TimeUUID(), "hello world").ExecContext(ctx); err != nil {
+	if err := session.Query(
+		`INSERT INTO tweet (timeline, id, text) VALUES (?, ?, ?)`,
+		"me", gocql.TimeUUID(), "hello world",
+	).ExecContext(ctx); err != nil {
 		log.Fatal(err)
 	}
 
@@ -62,16 +64,20 @@ func Example() {
 	/* Search for a specific set of records whose 'timeline' column matches
 	 * the value 'me'. The secondary index that we created earlier will be
 	 * used for optimizing the search */
-	if err := session.Query(`SELECT id, text FROM tweet WHERE timeline = ? LIMIT 1`,
-		"me").Consistency(gocql.One).ScanContext(ctx, &id, &text); err != nil {
+	if err := session.Query(
+		`SELECT id, text FROM tweet WHERE timeline = ? LIMIT 1`,
+		"me",
+	).Consistency(gocql.One).ScanContext(ctx, &id, &text); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Tweet:", id, text)
 	fmt.Println()
 
 	// list all tweets
-	scanner := session.Query(`SELECT id, text FROM tweet WHERE timeline = ?`,
-		"me").IterContext(ctx).Scanner()
+	scanner := session.Query(
+		`SELECT id, text FROM tweet WHERE timeline = ?`,
+		"me",
+	).IterContext(ctx).Scanner()
 	for scanner.Next() {
 		err = scanner.Scan(&id, &text)
 		if err != nil {

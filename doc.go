@@ -846,4 +846,4 @@
 // if you need to have multiple listeners for the same event.
 //
 // See [ClusterConfig.Metadata] for more details and Example_eventListeners for a complete implementation example.
-package gocql // import "github.com/apache/cassandra-gocql-driver/v2"
+package gocql // import "github.com/sawyer523/cassandra-gocql-driver/v2"

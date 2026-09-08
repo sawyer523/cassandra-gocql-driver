@@ -187,7 +187,7 @@ The module has been moved to the Apache Software Foundation with a new import pa
 import "github.com/gocql/gocql"
 
 // NEW (v2.x)
-import "github.com/apache/cassandra-gocql-driver/v2"
+import "github.com/sawyer523/cassandra-gocql-driver/v2"
 ```
 
 **Compressor modules converted to packages:**
@@ -229,7 +229,7 @@ import "github.com/gocql/gocql"
 import "github.com/gocql/gocql/lz4"  // Was separate module
 
 // NEW (v2.x)
-import "github.com/apache/cassandra-gocql-driver/v2"
+import "github.com/sawyer523/cassandra-gocql-driver/v2"
 import "github.com/apache/cassandra-gocql-driver/v2/snappy"  // Now package
 import "github.com/apache/cassandra-gocql-driver/v2/lz4"     // Now package
 import "github.com/apache/cassandra-gocql-driver/v2/hostpool"  // For HostPoolHostPolicy

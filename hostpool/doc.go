@@ -32,7 +32,7 @@
 //
 //	import (
 //		"github.com/hailocab/go-hostpool"
-//		"github.com/apache/cassandra-gocql-driver/v2"
+//		"github.com/sawyer523/cassandra-gocql-driver/v2"
 //		"github.com/apache/cassandra-gocql-driver/v2/hostpool"
 //	)
 //

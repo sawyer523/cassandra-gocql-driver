@@ -32,7 +32,7 @@
 //	import (
 //		"os"
 //		"github.com/rs/zerolog"
-//		"github.com/apache/cassandra-gocql-driver/v2"
+//		"github.com/sawyer523/cassandra-gocql-driver/v2"
 //		"github.com/apache/cassandra-gocql-driver/v2/gocqlzerolog"
 //	)
 //
@@ -92,7 +92,7 @@
 //	import (
 //		"os"
 //		"github.com/rs/zerolog"
-//		"github.com/apache/cassandra-gocql-driver/v2"
+//		"github.com/sawyer523/cassandra-gocql-driver/v2"
 //		"github.com/apache/cassandra-gocql-driver/v2/gocqlzerolog"
 //	)
 //

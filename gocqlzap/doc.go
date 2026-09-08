@@ -31,7 +31,7 @@
 //
 //	import (
 //		"go.uber.org/zap"
-//		"github.com/apache/cassandra-gocql-driver/v2"
+//		"github.com/sawyer523/cassandra-gocql-driver/v2"
 //		"github.com/apache/cassandra-gocql-driver/v2/gocqlzap"
 //	)
 //

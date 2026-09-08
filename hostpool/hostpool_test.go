@@ -28,16 +28,16 @@ import (
 
 	"github.com/hailocab/go-hostpool"
 
-	gocql "github.com/apache/cassandra-gocql-driver/v2"
+	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
 )
 
 func TestHostPolicy_HostPool(t *testing.T) {
 	policy := HostPoolHostPolicy(hostpool.New(nil))
 
-	//hosts := []*gocql.HostInfo{
+	// hosts := []*gocql.HostInfo{
 	//	{hostId: "f1935733-af5f-4995-bd1e-94a7a3e67bfd", connectAddress: net.ParseIP("10.0.0.0")},
 	//	{hostId: "93ca4489-b322-4fda-b5a5-12d4436271df", connectAddress: net.ParseIP("10.0.0.1")},
-	//}
+	// }
 	firstHostId, err1 := gocql.ParseUUID("f1935733-af5f-4995-bd1e-94a7a3e67bfd")
 	secondHostId, err2 := gocql.ParseUUID("93ca4489-b322-4fda-b5a5-12d4436271df")
 
@@ -49,7 +49,9 @@ func TestHostPolicy_HostPool(t *testing.T) {
 		map[string]interface{}{
 			"peer":        net.ParseIP("10.0.0.0"),
 			"native_port": 9042,
-			"host_id":     firstHostId})
+			"host_id":     firstHostId,
+		},
+	)
 	if err != nil {
 		t.Errorf("Error creating first host: %v", err)
 	}
@@ -58,7 +60,9 @@ func TestHostPolicy_HostPool(t *testing.T) {
 		map[string]interface{}{
 			"peer":        net.ParseIP("10.0.0.1"),
 			"native_port": 9042,
-			"host_id":     secondHostId})
+			"host_id":     secondHostId,
+		},
+	)
 	if err != nil {
 		t.Errorf("Error creating second host: %v", err)
 	}
