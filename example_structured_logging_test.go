@@ -27,10 +27,10 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
+	gocql "github.com/apache/cassandra-gocql-driver/v2"
 
-	"github.com/sawyer523/cassandra-gocql-driver/v2/gocqlzap"
-	"github.com/sawyer523/cassandra-gocql-driver/v2/gocqlzerolog"
+	"github.com/apache/cassandra-gocql-driver/v2/gocqlzap"
+	"github.com/apache/cassandra-gocql-driver/v2/gocqlzerolog"
 )
 
 // Example_structuredLogging demonstrates the new structured logging features

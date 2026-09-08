@@ -40,8 +40,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/lru"
-	"github.com/sawyer523/cassandra-gocql-driver/v2/internal/streams"
+	"github.com/apache/cassandra-gocql-driver/v2/internal/lru"
+	"github.com/apache/cassandra-gocql-driver/v2/internal/streams"
 )
 
 // approve the authenticator with the list of allowed authenticators. If the provided list is empty,

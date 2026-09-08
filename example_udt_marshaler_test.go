@@ -28,7 +28,7 @@ import (
 	"context"
 	"log"
 
-	gocql "github.com/sawyer523/cassandra-gocql-driver/v2"
+	gocql "github.com/apache/cassandra-gocql-driver/v2"
 )
 
 // MyUDTMarshaler implements UDTMarshaler.

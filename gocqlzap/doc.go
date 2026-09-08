@@ -31,8 +31,8 @@
 //
 //	import (
 //		"go.uber.org/zap"
-//		"github.com/sawyer523/cassandra-gocql-driver/v2"
-//		"github.com/sawyer523/cassandra-gocql-driver/v2/gocqlzap"
+//		"github.com/apache/cassandra-gocql-driver/v2"
+//		"github.com/apache/cassandra-gocql-driver/v2/gocqlzap"
 //	)
 //
 //	zapLogger, _ := zap.NewProduction()
@@ -125,4 +125,4 @@
 //
 // The logger implementation is thread-safe and can be used concurrently
 // across multiple goroutines, as guaranteed by the underlying Zap logger.
-package gocqlzap // import "github.com/sawyer523/cassandra-gocql-driver/v2/gocqlzap"
+package gocqlzap // import "github.com/apache/cassandra-gocql-driver/v2/gocqlzap"

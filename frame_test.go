@@ -34,8 +34,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/sawyer523/cassandra-gocql-driver/v2/lz4"
-	"github.com/sawyer523/cassandra-gocql-driver/v2/snappy"
+	"github.com/apache/cassandra-gocql-driver/v2/lz4"
+	"github.com/apache/cassandra-gocql-driver/v2/snappy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
